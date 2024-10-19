@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        #video {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border: 1px solid black;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>QR Code Scanner</h1>
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" name="amount" required><br><br>
+
+    <div id="result"></div>
+
+    <!-- Load jsQR from a reliable source -->
+    <script type="module">
+        import QrScanner from 'https://unpkg.com/qr-scanner/qr-scanner.min.js';
+        
+        const senderWallet = "https://ilp.interledger-test.dev/rio";
+        const keyId = "eba0f5cc-9121-4bf4-8496-e2b32d1a6167";
+        const privateKey = `
+-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIPbF0CVXvaAw0msmVKwZ8eew/DGefOgO+tWSeBak1l+I
+-----END PRIVATE KEY-----
+`;
+
+        // Ensure QrScanner is initialized on page load
+        window.onload = () => {
+            const video = document.createElement('video');
+            const resultDiv = document.getElementById('result');
+            document.body.appendChild(video);
+            const qrScanner = new QrScanner(video, result => {
+                resultDiv.innerText = `QR Code Result: ${result}`;
+                const amount = (document.getElementById('amount').value * 100).toString();
+                sendQrResult(senderWallet, result, keyId, amount, privateKey);
+                qrScanner.stop(); // Stop scanning after successful read
+            });
+
+            // Start scanning
+            QrScanner.hasCamera().then(hasCamera => {
+                if (hasCamera) {
+                    qrScanner.start();
+                } else {
+                    resultDiv.innerText = 'No camera found';
+                }
+            });
+        };
+
+        var iframe = document.getElementById("myIframe");
+
+        function sendQrResult(senderWallet, receiverWallet, keyId, amount, privateKey) {
+
+            fetch('http://localhost:3000/qr-result', { // Replace with your server's URL
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json', // Specify the content type
+                },
+                body: JSON.stringify({
+                    senderWallet,
+                    receiverWallet,
+                    keyId,
+                    amount,
+                    data: {
+                        value1: 'example1',
+                        value2: 'example2'
+                    }
+                })
+                // Send the result in the request body
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(typeof (data));
+                    if (data.message) {
+                        window.location.href = data.message;
+                    } else {
+                        console.log('Message not found in response:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle any errors
+                });
+        }
+
+
+    </script>
+</body>
+
+</html>
