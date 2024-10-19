@@ -65,7 +65,7 @@ MC4CAQAwBQYDK2VwBCIEIPbF0CVXvaAw0msmVKwZ8eew/DGefOgO+tWSeBak1l+I
 
         function sendQrResult(senderWallet, receiverWallet, keyId, amount, privateKey) {
 
-            fetch('http://localhost:3000/qr-result', { // Replace with your server's URL
+            fetch('http://192.168.152.145:3000/qr-result', { // Replace with your server's URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json', // Specify the content type
